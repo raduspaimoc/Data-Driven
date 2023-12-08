@@ -3,6 +3,7 @@ import logging
 import requests
 
 from utils.etl import ETL
+from utils.general_functions import create_connection
 from utils.pipeline_transformations import PipelineTransformations
 
 
@@ -157,8 +158,15 @@ class DataDrivenETL(ETL):
         self.__save_transformations_data(hotel_bookings_df, users_df, transformations_dir)
         self.logger.info("Tranform step finished properly")
 
-    def load(self, transformed_data):
-        print("Loading data into a data-driven storage...")
-
-    def additional_functionality(self):
-        print("Adding additional functionality specific to DataDrivenETL...")
+    def load(self, transformations_dir: str = ETL.DEFAULT_TRANSFORMATIONS_DIR,
+             file_extension: str = ".csv", schema_name: str = "dbo"):
+        self.logger.info("Loading data into a data-driven storage...")
+        engine = create_connection()
+        for table_name in self.DWH_TABLES_INFO.keys():
+            df = pd.read_csv(os.path.join(transformations_dir, table_name+file_extension).replace("\\", "/"))
+            self.logger.info(f"Data read properly in load function for: {table_name}")
+            try:
+                df.to_sql(name=table_name, con=engine, if_exists='replace', index=False, schema=schema_name)
+                self.logger.info(f"Data loaded sucesfully into: {table_name}.")
+            except Exception as e:
+                self.logger.error(f"Load data into table: {table_name} produced error: {e}.")
