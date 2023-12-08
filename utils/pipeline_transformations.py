@@ -1,4 +1,5 @@
 import re
+import ast
 
 import pandas as pd
 import numpy as np
@@ -50,6 +51,7 @@ class PipelineTransformations:
     @staticmethod
     def get_address_subfields(users_df) -> pd.DataFrame:
         # Address subfields
+        users_df['address'] = users_df['address'].apply(ast.literal_eval)
         users_df['street'] = users_df['address'].apply(lambda x: x['street'])
         users_df['suite'] = users_df['address'].apply(lambda x: x['suite'])
         users_df['city'] = users_df['address'].apply(lambda x: x['city'])
@@ -60,6 +62,7 @@ class PipelineTransformations:
 
     @staticmethod
     def get_company_subfields(users_df) -> pd.DataFrame:
+        users_df['company'] = users_df['company'].apply(ast.literal_eval)
         users_df['company_name'] = users_df['company'].apply(lambda x: x['name'])
         users_df['company_catchPhrase'] = users_df['company'].apply(lambda x: x['catchPhrase'])
         users_df['company_bs'] = users_df['company'].apply(lambda x: x['bs'])

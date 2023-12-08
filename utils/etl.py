@@ -1,6 +1,7 @@
 class ETL:
     DEFAULT_SEPARATOR = ";"
     DEFAULT_EXTRACTIONS_DIR = "data/extract"
+    DEFAULT_TRANSFORMATIONS_DIR = "data/transform"
 
     def __init__(self):
         self.data = None
