@@ -7,12 +7,13 @@ from utils.general_functions import create_connection
 from utils.pipeline_transformations import PipelineTransformations
 
 
-import numpy as np
 import pandas as pd
 
 
 class DataDrivenETL(ETL):
-
+    """
+    ETL class for data-driven processes.
+    """
     DWH_TABLES_INFO = {
         "dim_companies": ['company_name', 'company_catchPhrase', 'company_bs'],
         "dim_hotels": ["hotel_id", "hotel"],
@@ -23,11 +24,25 @@ class DataDrivenETL(ETL):
     }
 
     def __init__(self, logger: logging.Logger, files_separator: str = ETL.DEFAULT_SEPARATOR):
+        """
+        Constructor for DataDrivenETL.
+
+        Parameters:
+        - logger (logging.Logger): Logger instance for logging messages.
+        - files_separator (str): Separator used in files. Default is ETL.DEFAULT_SEPARATOR.
+        """
         super().__init__()
         self.logger = logger
         self.files_separator = files_separator
 
     def __get_data_from_files(self, files_to_extract: dict,  extractions_dir: str = ETL.DEFAULT_EXTRACTIONS_DIR):
+        """
+        Extract data from files.
+
+        Parameters:
+        - files_to_extract (dict): Dictionary mapping save file names to extract file names.
+        - extractions_dir (str): Directory path for extraction. Default is ETL.DEFAULT_EXTRACTIONS_DIR.
+        """
         for save_file_name, extract_file_name in files_to_extract.items():
             self.logger.info(f"Started extraction: {extract_file_name}")
             df = pd.read_csv(extract_file_name, sep=self.files_separator)
@@ -36,6 +51,13 @@ class DataDrivenETL(ETL):
             self.logger.info(f"{save_file_name} extracted properly into {save_path}")
 
     def __get_data_from_apis(self, urls_to_extract: dict, extractions_dir: str = ETL.DEFAULT_EXTRACTIONS_DIR):
+        """
+        Extract data from APIs.
+
+        Parameters:
+        - urls_to_extract (dict): Dictionary mapping save file names to API URLs.
+        - extractions_dir (str): Directory path for extraction. Default is ETL.DEFAULT_EXTRACTIONS_DIR.
+        """
         for save_file_name, extract_url in urls_to_extract.items():
             self.logger.info(f"Started extraction: {extract_url}")
             response = requests.get(extract_url)
@@ -53,11 +75,27 @@ class DataDrivenETL(ETL):
 
     def extract(self, files_to_extract: dict, urls_to_extract: dict,
                 extractions_dir: str = ETL.DEFAULT_EXTRACTIONS_DIR):
+        """
+        Extract data from files and APIs.
 
+        Parameters:
+        - files_to_extract (dict): Dictionary mapping save file names to extract file names.
+        - urls_to_extract (dict): Dictionary mapping save file names to API URLs.
+        - extractions_dir (str): Directory path for extraction. Default is ETL.DEFAULT_EXTRACTIONS_DIR.
+        """
         self.__get_data_from_files(files_to_extract, extractions_dir=extractions_dir)
         self.__get_data_from_apis(urls_to_extract, extractions_dir=extractions_dir)
 
     def __bookings_transformations(self, hotel_bookings_df) -> pd.DataFrame:
+        """
+        Apply transformations specific to hotel bookings data.
+
+        Parameters:
+        - hotel_bookings_df (pd.DataFrame): DataFrame containing hotel bookings data.
+
+        Returns:
+        - pd.DataFrame: Transformed DataFrame.
+        """
         # Dates standarize
         hotel_bookings_df = PipelineTransformations.dates_standardize(hotel_bookings_df=hotel_bookings_df)
         # Data Cleansing
@@ -69,6 +107,15 @@ class DataDrivenETL(ETL):
         return hotel_bookings_df
 
     def __users_transformations(self, users_df) -> pd.DataFrame:
+        """
+        Apply transformations specific to users data.
+
+        Parameters:
+        - users_df (pd.DataFrame): DataFrame containing users data.
+
+        Returns:
+        - pd.DataFrame: Transformed DataFrame.
+        """
         users_df = PipelineTransformations.get_address_subfields(users_df=users_df)
         users_df = PipelineTransformations.get_company_subfields(users_df=users_df)
         users_df.drop(['address', 'company'], axis=1, inplace=True)
@@ -83,6 +130,14 @@ class DataDrivenETL(ETL):
 
     def __save_transformations_data(self, hotel_bookings_df: pd.DataFrame,
                                     users_df: pd.DataFrame, transformations_dir: str):
+        """
+        Save transformed data into CSV files.
+
+        Parameters:
+        - hotel_bookings_df (pd.DataFrame): Transformed DataFrame for hotel bookings.
+        - users_df (pd.DataFrame): Transformed DataFrame for users.
+        - transformations_dir (str): Directory path for storing transformations.
+        """
         # Dim companies
         unique_companies = users_df[self.DWH_TABLES_INFO["dim_companies"]].drop_duplicates()
         # Create a mapping between unique companies and company IDs
@@ -142,6 +197,14 @@ class DataDrivenETL(ETL):
 
     def transform(self, data, extractions_dir: str = ETL.DEFAULT_EXTRACTIONS_DIR,
                   transformations_dir: str = ETL.DEFAULT_TRANSFORMATIONS_DIR):
+        """
+        Transform extracted data and save it into CSV files.
+
+        Parameters:
+        - data (tuple): Tuple containing file names for hotel bookings and users.
+        - extractions_dir (str): Directory path for extraction. Default is ETL.DEFAULT_EXTRACTIONS_DIR.
+        - transformations_dir (str): Directory path for storing transformations. Default is ETL.DEFAULT_TRANSFORMATIONS_DIR.
+        """
         hotel_bookings_file_name = data[0]
         users_file_name = data[1]
 
@@ -160,6 +223,14 @@ class DataDrivenETL(ETL):
 
     def load(self, transformations_dir: str = ETL.DEFAULT_TRANSFORMATIONS_DIR,
              file_extension: str = ".csv", schema_name: str = "dbo"):
+        """
+        Load transformed data into a data-driven storage.
+
+        Parameters:
+        - transformations_dir (str): Directory path for storing transformations. Default is ETL.DEFAULT_TRANSFORMATIONS_DIR.
+        - file_extension (str): File extension for the transformed data files. Default is ".csv".
+        - schema_name (str): Schema name for the database. Default is "dbo".
+        """
         self.logger.info("Loading data into a data-driven storage...")
         engine = create_connection()
         for table_name in self.DWH_TABLES_INFO.keys():

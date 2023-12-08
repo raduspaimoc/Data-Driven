@@ -8,6 +8,15 @@ DEFAULT_LOG_FILE = 'logfile.log'
 
 
 def get_logger(log_file: str = DEFAULT_LOG_FILE) -> logging.Logger:
+    """
+    Get a configured logger instance.
+
+    Parameters:
+    - log_file (str): The name of the log file.
+
+    Returns:
+    - logger (logging.Logger): Configured logger instance.
+    """
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
     # Create a console handler and set the level to INFO
@@ -30,6 +39,14 @@ def get_logger(log_file: str = DEFAULT_LOG_FILE) -> logging.Logger:
 
 
 def create_connection():
+    """
+    Create a SQLAlchemy engine for a database connection.
+
+    Reads database configuration from 'utils/config.json'.
+
+    Returns:
+    - engine (sqlalchemy.engine.Engine): SQLAlchemy engine instance.
+    """
     # Read configuration from JSON file
     with open('utils/config.json') as f:
         config = json.load(f)
