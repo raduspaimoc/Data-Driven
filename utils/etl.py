@@ -1,8 +1,11 @@
 class ETL:
+    DEFAULT_SEPARATOR = ";"
+    DEFAULT_EXTRACTIONS_DIR = "data/extract"
+
     def __init__(self):
         self.data = None
 
-    def extract(self):
+    def extract(self, files_to_extract: dict, urls_to_extract: dict, extractions_dir: str = DEFAULT_EXTRACTIONS_DIR):
         print(f"Extracting data...{self.data}")
 
     def transform(self, data):
@@ -11,4 +14,3 @@ class ETL:
 
     def load(self, transformed_data):
         print(f"Loading data into a generic storage...{self.data} tranformed into {transformed_data}.")
-        
